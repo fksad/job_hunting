@@ -6,6 +6,7 @@ from abc import ABC
 from src.micro_grad.loss import RMSELoss, BaseLoss
 from src.micro_grad.mlp import MLP
 
+
 class BaseTrainer(ABC):
     def __init__(self, model: MLP, learning_rate: float = .1, epochs: int = 100, early_stopping: bool = False,
                  loss: BaseLoss = None):
@@ -35,5 +36,3 @@ class Trainer(BaseTrainer):
                 loss.backward()
                 for param in self.model.parameters:
                     param.data -= self.learning_rate * param.grad
-
-

@@ -49,7 +49,30 @@ class Value:
         def _backward():
             self.grad += (out.data > 0) * out.grad
         out._backward = _backward
+        return out
 
+    def sigmoid(self):
+        out = Value(1 / (1 + np.exp(-self.data)), (self,), 'Sigmoid')
+        def _backward():
+            self.grad += out.grad * out.data * (1 - out.data)
+        out._backward = _backward
+        return out
+
+    def exp(self):
+        out = Value(np.exp(self._value), [self], 'exp')
+        def _backward():
+            self.grad += out.grad * out.data
+        out._backward = _backward
+        return out
+
+    def log(self):
+        out = Value(np.log(self._value), [self], 'log')
+        def _backward():
+            if self.data > 0:
+                self.grad += out.grad * 1 / self.data
+            else:
+                self.grad += out.grad * 1 / -self.data
+        out._backward = _backward
         return out
 
     def __add__(self, other):
@@ -81,23 +104,6 @@ class Value:
         out = Value(self._value ** other, [self], f"**{other}**")
         def _backward():
             self.grad += out.grad * (other * self._value ** (other - 1))
-        out._backward = _backward
-        return out
-
-    def exp(self):
-        out = Value(np.exp(self._value), [self], 'exp')
-        def _backward():
-            self.grad += out.grad * out.data
-        out._backward = _backward
-        return out
-
-    def log(self):
-        out = Value(np.log(self._value), [self], 'log')
-        def _backward():
-            if self.data > 0:
-                self.grad += out.grad * 1 / self.data
-            else:
-                self.grad += out.grad * 1 / -self.data
         out._backward = _backward
         return out
 
