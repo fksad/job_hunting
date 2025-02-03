@@ -3,6 +3,8 @@
 # date: 2025/2/2 15:53
 from abc import ABC
 
+import numpy as np
+
 from src.micro_grad.loss import RMSELoss, BaseLoss
 from src.micro_grad.mlp import MLP
 
@@ -18,7 +20,7 @@ class BaseTrainer(ABC):
 
 class Trainer(BaseTrainer):
 
-    def train(self, train_set, stop_loss=0):
+    def train(self, train_set, stop_loss=0, show_epoch=False):
         for epoch in range(self.epochs):
             train_data, train_labels = train_set
             pred_data_list = []
@@ -28,7 +30,12 @@ class Trainer(BaseTrainer):
             loss = self.loss(pred_data_list, train_labels)
 
             if epoch % 5 == 0:
-                print(f'epoch: {epoch}, loss: {loss}')
+                acc = ''
+                if show_epoch:
+                    label_list = [np.argmax([v.data for v in pred_data]) for pred_data in pred_data_list]
+                    acc = [np.argmax(train_label)==label for train_label, label in zip(train_labels, label_list)]
+                    acc = sum(acc) / len(acc)
+                print(f'epoch: {epoch}, loss: {loss}, acc: {acc}')
             if self.early_stopping and loss.data < stop_loss:
                 break
             else:

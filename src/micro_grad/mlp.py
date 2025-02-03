@@ -4,6 +4,7 @@
 from typing import List
 
 from src import BaseModule
+from src.micro_grad.layer import LinearLayer
 from src.micro_grad.layer.relu_layer import ReluLayer
 from src.micro_grad.layer.sigmoid_layer import SigmoidLayer
 
@@ -15,8 +16,10 @@ class MLP(BaseModule):
         for layer_idx, (cur_in_dim, cur_out_dim) in enumerate(zip(dim_list[:-1], dim_list[1:])):
             if layer_idx == 0:
                 cur_layer = ReluLayer(cur_in_dim, cur_out_dim)
+            elif layer_idx == len(dim_list) - 2:
+                cur_layer = LinearLayer(cur_in_dim, cur_out_dim)
             else:
-                cur_layer = ReluLayer(cur_in_dim, cur_out_dim)
+                cur_layer = LinearLayer(cur_in_dim, cur_out_dim)
             self._layer_list.append(cur_layer)
 
     @property
@@ -24,7 +27,7 @@ class MLP(BaseModule):
         return [p for layer in self._layer_list for p in layer.parameters]
 
     def forward(self, x):
-        for layer in self._layer_list:
+        for idx, layer in enumerate(self._layer_list):
             x = layer.forward(x)
         return x
 
