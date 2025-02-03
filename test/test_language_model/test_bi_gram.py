@@ -14,10 +14,12 @@ class BiGramTestCase(unittest.TestCase):
         self._bi_gram = BiGram('.')
 
     def test_predict(self):
-        self._test_str = 'anny'
+        self._test_str = 'andrejq'
         self._bi_gram.train(self._corpus)
         neg_log_likelihood = self._bi_gram.predict(self._test_str)
         print(f'negative log-likelihood of {self._test_str} is {neg_log_likelihood: .4f}')
+        random_str = self._bi_gram.generate()
+        print(f'random string is {random_str}')
 
     def tearDown(self):
         pass
