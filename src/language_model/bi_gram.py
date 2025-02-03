@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+# email: qianyixin@datagrand.com
+# date: 2025/2/3 20:20
+from typing import List, Dict
+import string
+
+import torch
+
+
+class BiGram:
+    _atoi: Dict[str, int] = {i: idx for idx, i in enumerate(string.ascii_lowercase)}
+    _itoa: Dict[int, str] = {idx: i for i, idx in _atoi.items()}
+
+    def __init__(self, special_tokens: str='.'):
+        self._special_tokens = special_tokens
+        self._atoi[self._special_tokens] = len(self._itoa)
+        self._itoa[len(self._itoa)] = special_tokens
+        self._output_count_matrix = torch.ones(len(self._itoa), len(self._itoa))
+        self._prob_matrix = torch.zeros(len(self._itoa), len(self._itoa))
+
+    def train(self, corpus: List[str]) -> None:
+        for line in corpus:
+            for char_1, char_2 in zip(line, line[1:]):
+                self._output_count_matrix[self._atoi[char_1], self._atoi[char_2]] += 1
+        self._prob_matrix = self._output_count_matrix / self._output_count_matrix.sum(dim=1, keepdim=True)
+
+    def predict(self, corpus: str) -> float:
+        log_likelihood = 0
+        for char_1, char_2 in zip(corpus, corpus[1:]):
+            prob = self._prob_matrix[self._atoi[char_1], self._atoi[char_2]]
+            log_likelihood += torch.log(prob)
+        return -log_likelihood
