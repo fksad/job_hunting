@@ -16,6 +16,12 @@ class BiGramTestCase(unittest.TestCase):
     def test_predict(self):
         self._test_str = 'andrejq'
         self._bi_gram.train(self._corpus)
+        log_likelihood_list = []
+        for line in self._corpus:
+            neg_loglikelihood = self._bi_gram.predict(line)
+            log_likelihood_list.append(neg_loglikelihood)
+        train_neg_loglikelihood = sum(log_likelihood_list) / len(log_likelihood_list)
+        print(f'train_neg_loglikelihood: {train_neg_loglikelihood: .4f}')
         neg_log_likelihood = self._bi_gram.predict(self._test_str)
         print(f'negative log-likelihood of {self._test_str} is {neg_log_likelihood: .4f}')
         random_str = self._bi_gram.generate()

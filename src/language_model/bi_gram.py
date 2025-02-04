@@ -25,10 +25,11 @@ class BiGram:
                 self._output_count_matrix[self._atoi[char_1], self._atoi[char_2]] += 1
         self._prob_matrix = self._output_count_matrix / self._output_count_matrix.sum(dim=1, keepdim=True)
 
-    def predict(self, corpus: str) -> float:
+    def predict(self, str: str) -> float:
         log_likelihood = 0
         n = 0
-        for char_1, char_2 in zip(corpus, corpus[1:]):
+        padded_str = self._special_tokens + str + self._special_tokens
+        for char_1, char_2 in zip(padded_str, padded_str[1:]):
             prob = self._prob_matrix[self._atoi[char_1], self._atoi[char_2]]
             log_likelihood += torch.log(prob)
             n += 1
@@ -39,8 +40,8 @@ class BiGram:
         cur_char = self._special_tokens
         while True:
             cur_idx = self._atoi[cur_char]
-            cur_prob = self._prob_matrix[cur_idx,]
-            next_char_idx = torch.multinomial(cur_prob, 1)
+            cur_prob = self._prob_matrix[cur_idx]
+            next_char_idx = torch.multinomial(cur_prob, 1, replacement=True)
             cur_char = self._itoa[next_char_idx.item()]
             if cur_char == self._special_tokens:
                 break
