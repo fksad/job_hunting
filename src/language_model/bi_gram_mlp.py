@@ -4,14 +4,14 @@
 from typing import List, Tuple
 
 import torch
-from torch.distributions.utils import logits_to_probs
 from torch.nn import functional as F
 
 from src.language_model.base_model import BaseModel
 
 
 class BiGramMLP(BaseModel):
-    def __init__(self, embed_dim: int, hidden_dim: int, regular: float):
+    def __init__(self, window_size: int, embed_dim: int, hidden_dim: int, regular: float):
+        self.window_size = window_size
         self.embed_dim = embed_dim
         self.hidden_dim = hidden_dim
         self.parameters = []
@@ -25,10 +25,11 @@ class BiGramMLP(BaseModel):
         learning_rate: float=.01,
         batch_size: int=32,
     ) -> None:
+        train_data, train_label = self._gen_gram(train_data, train_label)
         train_data = torch.tensor(train_data, dtype=torch.int32)
         train_label = torch.tensor(train_label, dtype=torch.int32)
         self.embed_weights = torch.rand((self.voc_size, self.embed_dim), dtype=torch.float32)
-        self.hidden_weights = torch.rand((self.embed_dim, self.hidden_dim), dtype=torch.float32)
+        self.hidden_weights = torch.rand((self.embed_dim * self.window_size, self.hidden_dim), dtype=torch.float32)
         self.hidden_bias = torch.rand(self.hidden_dim, dtype=torch.float32)
         self.softmax_weights = torch.rand((self.hidden_dim, self.voc_size), dtype=torch.float32)
         self.softmax_bias = torch.rand(self.voc_size, dtype=torch.float32)
@@ -51,13 +52,22 @@ class BiGramMLP(BaseModel):
                 print(f'epoch {epoch}, loss: {loss.item()}')
 
     def predict(self, test_data: str) -> float:
-        char_idx = torch.tensor([self._atoi[char] for char in test_data], dtype=torch.int64)
-        logit = self._forward(char_idx)
+        char_idx = [self._atoi[char] for char in test_data]
+        test_data, _ = self._gen_gram(char_idx)
+        test_data = torch.tensor(test_data, dtype=torch.int64)
+        logit = self._forward(test_data)
         exp_logit = logit.exp()
         prob_matrix = exp_logit / exp_logit.sum(dim=1, keepdim=True)
         loss_prob_vector = prob_matrix[torch.arange(len(char_idx) - 1), char_idx[1:]]
         loss = -loss_prob_vector.log().mean()
         return loss.item()
+
+    def _gen_gram(self, data, label=None):
+        assert len(data) > self.window_size, 'input data size must be larger than window_size'
+        data = [data[i:i+self.window_size] for i in range(0, len(data) - self.window_size + 1)]
+        if label is not None:
+            label = torch.tensor(label[self.window_size-1:], dtype=torch.int64)
+        return data, label
 
     def _draw_batch(
         self,
@@ -72,6 +82,6 @@ class BiGramMLP(BaseModel):
 
     def _forward(self, x: torch.tensor) -> torch.tensor:
         input_matrix = self.embed_weights[x]
-        data_matrix = torch.tanh(input_matrix @ self.hidden_weights + self.hidden_bias)
+        data_matrix = torch.tanh(input_matrix.view(-1, self.window_size * self.embed_dim) @ self.hidden_weights + self.hidden_bias)
         logit_matrix = data_matrix @ self.softmax_weights + self.softmax_bias
         return logit_matrix

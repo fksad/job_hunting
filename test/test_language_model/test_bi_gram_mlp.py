@@ -11,7 +11,7 @@ class BiGramMLPTestCase(unittest.TestCase):
         self._corpus_path = 'test/test_language_model/data/names.txt'
         with open(self._corpus_path) as corpus_file:
             self._corpus = corpus_file.read().split('\n')
-        self._bi_gram_mlp = BiGramMLP(embed_dim=3, hidden_dim=10, regular=0.001)
+        self._bi_gram_mlp = BiGramMLP(window_size=2, embed_dim=3, hidden_dim=10, regular=0.001)
 
     def test_train(self):
         train_set = []
