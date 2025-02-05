@@ -22,12 +22,13 @@ class BiGramMLP(BaseModel):
         train_data: List[int],
         train_label: List[int],
         epochs: int=100,
-        learning_rate: float=.01,
+        learning_rate_decay: list[float]=None,
         batch_size: int=32,
     ) -> None:
         train_data, train_label = self._gen_gram(train_data, train_label)
         train_data = torch.tensor(train_data, dtype=torch.int32)
         train_label = torch.tensor(train_label, dtype=torch.int32)
+        learning_rate = self._gen_learning_rate(learning_rate_decay, epochs)
         self.embed_weights = torch.rand((self.voc_size, self.embed_dim), dtype=torch.float32)
         self.hidden_weights = torch.rand((self.embed_dim * self.window_size, self.hidden_dim), dtype=torch.float32)
         self.hidden_bias = torch.rand(self.hidden_dim, dtype=torch.float32)
@@ -38,6 +39,7 @@ class BiGramMLP(BaseModel):
                            self.softmax_weights, self.softmax_bias]
         for param in self.parameters:
             param.requires_grad = True
+
         for epoch in range(epochs):
             train_data_batch, train_label_batch = self._draw_batch(batch_size, train_data, train_label)
             logit_matrix = self._forward(train_data_batch)
@@ -47,9 +49,9 @@ class BiGramMLP(BaseModel):
                 param.grad = None
             loss.backward()
             for param in self.parameters:
-                param.data -= learning_rate * param.grad
+                param.data -= 10**learning_rate[epoch] * param.grad
             if epoch % 100 == 0:
-                print(f'epoch {epoch}, loss: {loss.item()}')
+                print(f'epoch {epoch}, loss: {loss.item()}, cur_learning_rate: {10**learning_rate[epoch]}')
 
     def predict(self, test_data: str) -> float:
         char_idx = [self._atoi[char] for char in test_data]
@@ -58,7 +60,8 @@ class BiGramMLP(BaseModel):
         logit = self._forward(test_data)
         exp_logit = logit.exp()
         prob_matrix = exp_logit / exp_logit.sum(dim=1, keepdim=True)
-        loss_prob_vector = prob_matrix[torch.arange(len(char_idx) - 1), char_idx[1:]]
+        intput_len = len(test_data) - 1
+        loss_prob_vector = prob_matrix[torch.arange(intput_len), char_idx[self.window_size:self.window_size + intput_len]]
         loss = -loss_prob_vector.log().mean()
         return loss.item()
 
@@ -85,3 +88,12 @@ class BiGramMLP(BaseModel):
         data_matrix = torch.tanh(input_matrix.view(-1, self.window_size * self.embed_dim) @ self.hidden_weights + self.hidden_bias)
         logit_matrix = data_matrix @ self.softmax_weights + self.softmax_bias
         return logit_matrix
+
+    def _gen_learning_rate(self, learning_rate_decay: List[float], epochs: int) -> List[float]:
+        learning_rate_list = []
+        learning_rate_count = len(learning_rate_decay)
+        seg_len = epochs // learning_rate_count
+        for i in range(learning_rate_count - 1):
+            learning_rate_list.extend([learning_rate_decay[i]]*seg_len)
+        learning_rate_list.extend([learning_rate_decay[-1]]*(epochs - len(learning_rate_list)))
+        return learning_rate_list
