@@ -6,8 +6,10 @@ from typing import List
 import torch
 from torch.functional import F
 
+from src.language_model.base_model import BaseModel
 
-class BiGramNN:
+
+class BiGramNN(BaseModel):
     def __init__(self, class_dim=27):
         self._weights = None
         self._bias = None
@@ -26,7 +28,7 @@ class BiGramNN:
                 print(f'Epoch {i} loss: {loss.item()}')
 
     def predict(self, test_str: str) -> float:
-        char_idx_list = [self._char_to_i(char) for char in test_str]
+        char_idx_list = [self._atoi[char] for char in test_str]
         loss = self._forward(char_idx_list[:-1], char_idx_list[1:])
         return loss.item()
 
@@ -38,10 +40,3 @@ class BiGramNN:
         loss_prob_vector = prob_matrix[torch.arange(len(train_label)),torch.tensor(train_label)]
         loss =  -loss_prob_vector.log().mean()
         return loss
-
-    @staticmethod
-    def _char_to_i(char):
-        if char != '.':
-            return ord(char) - 97
-        else:
-            return 26

@@ -6,15 +6,13 @@ import string
 
 import torch
 
+from src.language_model.base_model import BaseModel
 
-class BiGram:
-    _atoi: Dict[str, int] = {i: idx for idx, i in enumerate(string.ascii_lowercase)}
-    _itoa: Dict[int, str] = {idx: i for i, idx in _atoi.items()}
 
-    def __init__(self, special_tokens: str='.'):
-        self._special_tokens = special_tokens
-        self._atoi[self._special_tokens] = len(self._itoa)
-        self._itoa[len(self._itoa)] = special_tokens
+class BiGram(BaseModel):
+
+
+    def __init__(self):
         self._output_count_matrix = torch.ones(len(self._itoa), len(self._itoa))
         self._prob_matrix = torch.zeros(len(self._itoa), len(self._itoa))
 
@@ -25,10 +23,10 @@ class BiGram:
                 self._output_count_matrix[self._atoi[char_1], self._atoi[char_2]] += 1
         self._prob_matrix = self._output_count_matrix / self._output_count_matrix.sum(dim=1, keepdim=True)
 
-    def predict(self, str: str) -> float:
+    def predict(self, test_data: str) -> float:
         log_likelihood = 0
         n = 0
-        padded_str = self._special_tokens + str + self._special_tokens
+        padded_str = self._special_tokens + test_data + self._special_tokens
         for char_1, char_2 in zip(padded_str, padded_str[1:]):
             prob = self._prob_matrix[self._atoi[char_1], self._atoi[char_2]]
             log_likelihood += torch.log(prob)
