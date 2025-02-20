@@ -11,7 +11,7 @@ class BiGramMLPTestCase(unittest.TestCase):
         self._corpus_path = 'test/test_language_model/data/names.txt'
         with open(self._corpus_path) as corpus_file:
             self._corpus = corpus_file.read().split('\n')
-        self._bi_gram_mlp = BiGramMLP(window_size=3, embed_dim=2, hidden_dim=10, regular=0.001)
+        self._bi_gram_mlp = BiGramMLP(window_size=3, embed_dim=10, hidden_dim=200, regular=0.0001)
 
     def test_train(self):
         train_set = []
@@ -21,7 +21,7 @@ class BiGramMLPTestCase(unittest.TestCase):
             for char1, char2 in zip(padded_line, padded_line[1:]):
                 train_set.append(self._bi_gram_mlp._atoi[char1])
                 train_label.append(self._bi_gram_mlp._atoi[char2])
-        self._bi_gram_mlp.train(train_set, train_label, epochs=10000, learning_rate_decay=[-1, -3, -5])
+        self._bi_gram_mlp.train(train_set, train_label, epochs=200000, learning_rate_decay=[-1, -2])
         loss = self._bi_gram_mlp.predict('andrejq')
         print(loss)
 

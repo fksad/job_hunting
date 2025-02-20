@@ -50,8 +50,8 @@ class BiGramMLP(BaseModel):
             loss.backward()
             for param in self.parameters:
                 param.data -= 10**learning_rate[epoch] * param.grad
-            if epoch % 100 == 0:
-                print(f'epoch {epoch}, loss: {loss.item()}, cur_learning_rate: {10**learning_rate[epoch]}')
+            if (epoch + 1) % 500 == 0:
+                print(f'epoch {epoch + 1}, loss: {loss.item()}, cur_learning_rate: {10**learning_rate[epoch]}')
 
     def predict(self, test_data: str) -> float:
         char_idx = [self._atoi[char] for char in test_data]
