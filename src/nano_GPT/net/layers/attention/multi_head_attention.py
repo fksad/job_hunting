@@ -10,9 +10,15 @@ from src.nano_GPT.net.layers.attention.single_head_attention import SingleHeadAt
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, model_config: ModelConfig):
-        super(MultiHeadAttention).__init__()
-        self.attention_head_list = [SingleHeadAttention(model_config) for _ in range(model_config.n_head)]
+        nn.Module.__init__(self)
+        self.attention_head_list = nn.ModuleList(
+            [SingleHeadAttention(model_config) for _ in range(model_config.n_head)]
+        )
+        self.projection_layer = nn.Linear(model_config.embed_size, model_config.embed_size)
+        self.drop = nn.Dropout(model_config.dropout_ratio)
 
     def forward(self, x):
         out = torch.cat([head(x) for head in self.attention_head_list], dim=-1)
+        out = self.projection_layer(out)
+        out = self.drop(out)
         return out

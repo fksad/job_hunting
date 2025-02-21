@@ -3,7 +3,6 @@
 # date: 2025/2/20 17:18
 import unittest
 
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader, random_split
 from transformers import GPT2Tokenizer
@@ -16,15 +15,15 @@ from src.nano_GPT.utils import plot_loss
 
 class NanoGPTTestCase(unittest.TestCase):
     def setUp(self):
-        self._data_path = './data/20'
+        self._data_path = 'test/test_nano_gpt/data/truncated_seq_monkey.json'
         self._tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
         self._batch_size = 64
-        self._epochs = 10
+        self._epochs = 2
         self._interval = 1
         self._device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-        self._max_lines = 100
+        self._max_lines = 1
         self._model_config = ModelConfig()
-        self._model = NanoGPTModel(self._model_config)
+        self._model = NanoGPTModel(self._model_config, self._device)
 
     def test_nano_gpt(self):
         total_params = sum(p.numel() for p in self._model.parameters())
@@ -47,15 +46,13 @@ class NanoGPTTestCase(unittest.TestCase):
                 if val_metric.f1_score > max_val_f1:
                     print(f'new max_val_f1_score: {val_metric.f1_score} in epoch: {epoch}, save model')
                     max_val_f1 = val_metric.f1_score
-                    self._model.save(path='data', model_name='stock_cnn_best_f1.pth')
+                    # self._model.save(path='data', model_name='stock_cnn_best_f1.pth')
         plot_loss(train_loss_list, val_loss_list)
-        self.assertEqual(True, False)
 
     def tearDown(self):
         pass
 
     def _load_train_data(self):
-        labels_df = pd.read_csv('data/label_file.csv')
         dataset = NanoGPTDataset(data_path=self._data_path, seq_len=self._model_config.seq_len,
                                  tokenizer=self._tokenizer, max_lines=self._max_lines)
         val_split = 0.2

@@ -8,7 +8,7 @@ from src.nano_GPT.config.model_config import ModelConfig
 
 class MLP(nn.Module):
     def __init__(self, model_config: ModelConfig):
-        super(MLP).__init__()
+        nn.Module.__init__(self)
         self.layer = nn.Sequential(
             nn.Linear(model_config.embed_size, model_config.embed_size * 4),
             nn.GELU(),

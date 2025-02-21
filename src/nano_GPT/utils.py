@@ -26,11 +26,13 @@ def plot_loss(train_loss_list: List[float], val_loss_list: List[float]) -> None:
     plt.show()
 
 
-def gen_metric(outputs: Tensor, label: Tensor, device: Device=torch.device('cpu'), loss: nn.modules.Module=None) -> Metric:
-    accuracy = Accuracy(task='binary').to(device)
-    precision = Precision(task='binary').to(device)
-    recall = Recall(task='binary').to(device)
-    f1 = F1Score(task='binary').to(device)
+def gen_metric(outputs: Tensor, label: Tensor, device: Device=torch.device('cpu'),num_class: int = 2, loss: nn.modules.Module=None) -> Metric:
+    accuracy = Accuracy(task='multiclass', num_classes=num_class).to(device)
+    precision = Precision(task='multiclass', num_classes=num_class).to(device)
+    recall = Recall(task='multiclass', num_classes=num_class).to(device)
+    f1 = F1Score(task='multiclass', num_classes=num_class).to(device)
+    outputs = outputs.view(-1, outputs.shape[-1])
+    label = label.view(-1)
     acc = accuracy(outputs, label)
     prec = precision(outputs, label)
     rec = recall(outputs, label)

@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from src.nano_GPT.config import model_config
 from src.nano_GPT.config.model_config import ModelConfig
 from src.nano_GPT.net.layers.gpt_block import GPTBlock
 
@@ -22,19 +23,15 @@ class NanoGPTNet(nn.Module):
     def forward(self, x, targets=None):
         loss = None
         batch_size, seq_len = x.shape
-        word_embed = self._word_embeddings(x)
-        position_embed = self._position_embeddings(torch.arange(seq_len, device=x.device))
+        word_embed = self._word_embedding_table(x)
+        position_embed = self._position_embedding_table(torch.arange(seq_len, device=x.device))
         input_embed = word_embed + position_embed
         attention = self.gpt_blocks(input_embed)
         attention = self.ln_final(attention)
         logits = self.lm_head(attention)
-        if targets is None:
-            loss = None
-        else:
+        if targets is not None:
             batch_size, seq_len, vocab_size = logits.size()
-            logits = logits.view(batch_size * seq_len, vocab_size)
-            targets = targets.view(batch_size * seq_len)
-            loss = F.cross_entropy(logits, targets)
+            loss = F.cross_entropy(logits.view(batch_size*seq_len, -1), targets.view(batch_size*seq_len))
         return logits, loss
 
     def generate(self, word_idx: torch.Tensor, max_new_token_len: int=200):

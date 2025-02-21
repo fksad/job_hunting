@@ -49,7 +49,7 @@ class NanoGPTDataset(Dataset):
             if len(chunk) < self._seq_len + 1:
                 chunk += [self._eos_token] * (self._seq_len + 1 - len(chunk))
             encoded_text_chunk_list.append(chunk)
-        return encoded_text_list
+        return encoded_text_chunk_list
 
     def __len__(self):
         return len(self._encoded_chunk_list)
