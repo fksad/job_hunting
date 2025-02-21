@@ -3,7 +3,7 @@
 # date: 2025/2/18 00:24
 from abc import ABC, abstractmethod
 
-from src.metric.metric import Metric
+from src.nano_GPT.config.metric import Metric
 
 
 class BaseModel(ABC):

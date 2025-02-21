@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 # email: qianyixin@datagrand.com
 # date: 2025/2/20 17:26
-from typing import List
+from typing import List, Protocol
 
 import ujson as json
-from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import Dataset
 
 
-class Tokenizer(ABC):
-    @abstractmethod
+class Tokenizer(Protocol):
     def encode(self, text: str) -> List[int]:
-        raise NotImplementedError
+        ...
 
-    @abstractmethod
     def decode(self, ids: List[int]) -> List[str]:
-        raise NotImplementedError
+        ...
 
 
 class NanoGPTDataset(Dataset):

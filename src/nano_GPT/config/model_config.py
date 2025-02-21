@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # email: qianyixin@datagrand.com
 # date: 2025/2/20 16:53
+from typing import Tuple
+
+import torch
 from pydantic import BaseModel
 
 
@@ -13,3 +16,7 @@ class ModelConfig(BaseModel):
     batch_size: int = 12
     vocab_size: int = 50257
     dropout_ratio: float = 0.1
+
+
+type GeneralDataLoader = torch.utils.data.DataLoader[Tuple[torch.Tensor, torch.Tensor]]
+
